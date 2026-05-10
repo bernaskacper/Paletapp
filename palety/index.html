@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f97316" />
+  <meta name="description" content="Zarządzanie paletami oczekującymi na wysyłkę" />
+
+  <!-- PWA / iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Palety" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+
+  <title>Palety</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <h1>📦 Palety</h1>
+  <span class="header-count" id="header-count">0 palet</span>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- INSTALL BANNER (Android) -->
+  <div class="install-banner" id="install-banner">
+    <span>Dodaj do ekranu głównego dla szybszego dostępu</span>
+    <button id="btn-install">Dodaj</button>
+    <button id="btn-install-dismiss" style="background:transparent;border:none;color:#fff;font-size:1.2rem;padding:4px 8px;cursor:pointer;">✕</button>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <button class="btn btn-primary" id="btn-add">+ Dodaj paletę</button>
+    <button class="btn btn-danger" id="btn-clear">🗑 Wyczyść wszystko</button>
+  </div>
+
+  <!-- SCROLL HINT -->
+  <p class="scroll-hint">← Przesuń tabelę w bok →</p>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state" class="empty-state" style="display:none;">
+    <div class="icon">📭</div>
+    <p>Brak palet na liście.<br>Dodaj pierwszą paletę klikając przycisk powyżej.</p>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrapper" id="table-wrapper" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Kraj</th>
+          <th>Rozmiar</th>
+          <th>Firma</th>
+          <th>Spakowana</th>
+          <th>Przewoźnik</th>
+          <th>Wiad.</th>
+          <th>Akcje</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<!-- MODAL — FORMULARZ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Dodaj paletę</h2>
+
+    <form id="pallet-form" novalidate>
+
+      <div class="form-group">
+        <label for="f-size">Rozmiar palety</label>
+        <input type="text" id="f-size" placeholder="np. 200x80x60" autocomplete="off" autocorrect="off" />
+      </div>
+
+      <div class="form-group">
+        <label for="f-country">Kraj (kod)</label>
+        <input type="text" id="f-country" placeholder="np. DE, PL, FR" maxlength="4"
+               autocomplete="off" autocorrect="off" autocapitalize="characters" />
+      </div>
+
+      <div class="form-group">
+        <label for="f-company">Nazwa firmy</label>
+        <input type="text" id="f-company" placeholder="np. BMW AG" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label>Spakowana</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn" id="packed-yes">✔ TAK</button>
+          <button type="button" class="toggle-btn active-no" id="packed-no">✘ NIE</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="f-carrier">Przewoźnik</label>
+        <select id="f-carrier">
+          <option value="" disabled selected>— wybierz —</option>
+          <option value="raben">Raben</option>
+          <option value="geis">Geis</option>
+          <option value="schenker">Schenker</option>
+          <option value="other">Inny</option>
+        </select>
+        <div id="other-carrier-input">
+          <input type="text" id="f-carrier-other" placeholder="Wpisz nazwę przewoźnika" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Wiadomość do kuriera</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn" id="msg-yes">✔ TAK</button>
+          <button type="button" class="toggle-btn active-no" id="msg-no">✘ NIE</button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" id="btn-cancel">Anuluj</button>
+        <button type="submit" class="btn btn-save">💾 Zapisz</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <p id="confirm-msg"></p>
+    <div class="btn-row">
+      <button class="btn btn-cancel" id="confirm-no">Anuluj</button>
+      <button class="btn btn-danger" id="confirm-yes">Usuń</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
