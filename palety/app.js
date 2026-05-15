@@ -76,14 +76,27 @@ function wireToggle(btns, setter) {
 wireToggle(btnPacked,  v => { formPacked  = v; });
 wireToggle(btnMessage, v => { formMessage = v; });
 
+// ── ENTER KEY NAVIGATION ───────────────────────────────────────────────────────
+document.getElementById('pallet-form').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.target.tagName !== 'INPUT') return;
+  e.preventDefault();
+
+  const form = document.getElementById('pallet-form');
+  const focusable = Array.from(form.querySelectorAll('input:not([disabled]), select:not([disabled])'));
+  const idx = focusable.indexOf(e.target);
+  if (idx !== -1 && idx < focusable.length - 1) {
+    focusable[idx + 1].focus();
+  }
+});
+
 // ── PALLET ROWS ────────────────────────────────────────────────────────────────
 function createPalletRow(wymiary = '', waga = '', ilosc = 1) {
   const div = document.createElement('div');
   div.className = 'pallet-row';
   div.innerHTML =
-    '<input type="text"   class="p-wymiary" placeholder="200x80x60" autocomplete="off" autocorrect="off" />' +
-    '<input type="text"   class="p-waga"    placeholder="np. 500kg" autocomplete="off" />' +
-    '<input type="number" class="p-ilosc"   min="1" value="1" />' +
+    '<input type="text"   class="p-wymiary" placeholder="200x80x60" autocomplete="off" autocorrect="off" enterkeyhint="next" />' +
+    '<input type="text"   class="p-waga"    placeholder="np. 500kg" autocomplete="off" enterkeyhint="next" />' +
+    '<input type="number" class="p-ilosc"   min="1" value="1" enterkeyhint="next" />' +
     '<button type="button" class="btn-remove-pallet" title="Usuń paletę">✕</button>';
 
   div.querySelector('.p-wymiary').value = wymiary;
