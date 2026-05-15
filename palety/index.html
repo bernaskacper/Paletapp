@@ -21,7 +21,7 @@
 <!-- HEADER -->
 <header>
   <h1>📦 Palety</h1>
-  <span class="header-count" id="header-count">0 palet</span>
+  <span class="header-count" id="header-count">0 pozycji</span>
 </header>
 
 <!-- MAIN -->
@@ -40,11 +40,19 @@
     <button class="btn btn-danger" id="btn-clear">🗑 Wyczyść wszystko</button>
   </div>
 
+  <!-- COPY BUTTONS -->
+  <div class="copy-bar" id="copy-bar" style="display:none;">
+    <button class="btn btn-copy btn-copy-raben" id="copy-raben">📋 Kopiuj Raben</button>
+    <button class="btn btn-copy btn-copy-geis" id="copy-geis">📋 Kopiuj Geis</button>
+    <button class="btn btn-copy btn-copy-dsv" id="copy-dsv">📋 Kopiuj DSV</button>
+    <button class="btn btn-copy btn-copy-other" id="copy-other">📋 Kopiuj Inny</button>
+  </div>
+
   <!-- SCROLL HINT -->
   <p class="scroll-hint">← Przesuń tabelę w bok →</p>
 
   <!-- EMPTY STATE -->
-  <div id="empty-state" class="empty-state" style="display:none;">
+  <div id="empty-state" class="empty-state">
     <div class="icon">📭</div>
     <p>Brak palet na liście.<br>Dodaj pierwszą paletę klikając przycisk powyżej.</p>
   </div>
@@ -55,10 +63,10 @@
       <thead>
         <tr>
           <th>Kraj</th>
-          <th>Rozmiar</th>
           <th>Firma</th>
-          <th>Spakowana</th>
+          <th>Rozmiar / Waga</th>
           <th>Przewoźnik</th>
+          <th>Spakowana</th>
           <th>Wiad.</th>
           <th>Akcje</th>
         </tr>
@@ -77,11 +85,6 @@
     <form id="pallet-form" novalidate>
 
       <div class="form-group">
-        <label for="f-size">Rozmiar palety</label>
-        <input type="text" id="f-size" placeholder="np. 200x80x60" autocomplete="off" autocorrect="off" />
-      </div>
-
-      <div class="form-group">
         <label for="f-country">Kraj (kod)</label>
         <input type="text" id="f-country" placeholder="np. DE, PL, FR" maxlength="4"
                autocomplete="off" autocorrect="off" autocapitalize="characters" />
@@ -93,24 +96,21 @@
       </div>
 
       <div class="form-group">
+        <label for="f-carrier">Przewoźnik</label>
+        <select id="f-carrier">
+          <option value="">— brak —</option>
+          <option value="raben">Raben</option>
+          <option value="geis">Geis</option>
+          <option value="dsv">DSV</option>
+          <option value="other">Inny</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>Spakowana</label>
         <div class="toggle-group">
           <button type="button" class="toggle-btn" id="packed-yes">✔ TAK</button>
           <button type="button" class="toggle-btn active-no" id="packed-no">✘ NIE</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="f-carrier">Przewoźnik</label>
-        <select id="f-carrier">
-          <option value="" disabled selected>— wybierz —</option>
-          <option value="raben">Raben</option>
-          <option value="geis">Geis</option>
-          <option value="schenker">Schenker</option>
-          <option value="other">Inny</option>
-        </select>
-        <div id="other-carrier-input">
-          <input type="text" id="f-carrier-other" placeholder="Wpisz nazwę przewoźnika" autocomplete="off" />
         </div>
       </div>
 
@@ -120,6 +120,18 @@
           <button type="button" class="toggle-btn" id="msg-yes">✔ TAK</button>
           <button type="button" class="toggle-btn active-no" id="msg-no">✘ NIE</button>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label>Palety</label>
+        <div class="pallets-col-labels">
+          <span>Wymiary</span>
+          <span>Waga</span>
+          <span>Ilość</span>
+          <span></span>
+        </div>
+        <div id="pallets-list"></div>
+        <button type="button" class="btn-add-pallet" id="btn-add-pallet">+ Dodaj kolejną paletę</button>
       </div>
 
       <div class="modal-footer">
