@@ -1,4 +1,4 @@
-const CACHE_NAME = 'palety-v2';
+const CACHE_NAME = 'palety-v3';
 const ASSETS = [
   './',
   './index.html',

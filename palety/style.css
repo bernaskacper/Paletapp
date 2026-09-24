@@ -342,18 +342,6 @@ main {
   touch-action: manipulation;
 }
 
-.toggle-btn.active-yes {
-  background: #14532d;
-  border-color: var(--green);
-  color: #4ade80;
-}
-
-.toggle-btn.active-no {
-  background: var(--red-bg);
-  border-color: var(--red);
-  color: #fca5a5;
-}
-
 /* PALLETS SECTION */
 .pallets-col-labels {
   display: flex;
@@ -471,7 +459,7 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 680px;
+  min-width: 520px;
   background: var(--surface);
 }
 
@@ -534,16 +522,6 @@ tr.row-geis:hover > td { background-color: #1e4976; }
 tr.row-dsv:hover > td { background-color: #166534; }
 tr.row-other:hover > td { background-color: #374151; }
 tr.row-none:hover > td { background-color: #1f2937; }
-
-/* YES/NO — text color only, inherits row background */
-td.cell-yes {
-  color: #4ade80 !important;
-  font-weight: 700;
-}
-td.cell-no {
-  color: #f87171 !important;
-  font-weight: 700;
-}
 
 td.cell-country {
   font-size: 1.05rem;

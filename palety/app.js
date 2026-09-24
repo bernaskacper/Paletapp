@@ -81,31 +81,12 @@ const palletsList    = document.getElementById('pallets-list');
 const fCountry  = document.getElementById('f-country');
 const fCompany  = document.getElementById('f-company');
 const fCarrier  = document.getElementById('f-carrier');
-const btnPacked  = { yes: document.getElementById('packed-yes'), no: document.getElementById('packed-no') };
-const btnMessage = { yes: document.getElementById('msg-yes'),    no: document.getElementById('msg-no') };
 const btnDay     = { today: document.getElementById('day-today'), tomorrow: document.getElementById('day-tomorrow') };
 const tabBtns    = { today: document.getElementById('tab-today'), tomorrow: document.getElementById('tab-tomorrow') };
 
-let formPacked  = false;
-let formMessage = false;
-let formDay     = 'today';
+let formDay = 'today';
 
-// ── TOGGLE HELPERS ─────────────────────────────────────────────────────────────
-function setToggle(btns, val) {
-  btns.yes.classList.toggle('active-yes', val);
-  btns.yes.classList.toggle('active-no', false);
-  btns.no.classList.toggle('active-no', !val);
-  btns.no.classList.toggle('active-yes', false);
-}
-
-function wireToggle(btns, setter) {
-  btns.yes.addEventListener('click', () => { setter(true);  setToggle(btns, true); });
-  btns.no.addEventListener('click',  () => { setter(false); setToggle(btns, false); });
-}
-
-wireToggle(btnPacked,  v => { formPacked  = v; });
-wireToggle(btnMessage, v => { formMessage = v; });
-
+// ── DAY TOGGLE ─────────────────────────────────────────────────────────────────
 function setDay(day) {
   formDay = day;
   btnDay.today.classList.toggle('active-day', day === 'today');
@@ -179,8 +160,6 @@ function openModal(id = null) {
     fCountry.value  = item.country;
     fCompany.value  = item.company;
     fCarrier.value  = item.carrier || '';
-    formPacked      = item.packed;
-    formMessage     = item.message;
     setDay(isToday(item) ? 'today' : 'tomorrow');
 
     const rows = (item.pallets && item.pallets.length) ? item.pallets : [{ wymiary:'', waga:'', ilosc:1 }];
@@ -190,15 +169,11 @@ function openModal(id = null) {
     fCountry.value  = '';
     fCompany.value  = '';
     fCarrier.value  = '';
-    formPacked      = false;
-    formMessage     = false;
     // Pallets are usually reported a day ahead — Today is the exception
     setDay('tomorrow');
     palletsList.appendChild(createPalletRow());
   }
 
-  setToggle(btnPacked,  formPacked);
-  setToggle(btnMessage, formMessage);
   modalOverlay.classList.add('open');
   setTimeout(() => fCountry.focus(), 100);
 }
@@ -236,8 +211,6 @@ document.getElementById('pallet-form').addEventListener('submit', e => {
     country:   fCountry.value.trim().toUpperCase(),
     company:   fCompany.value.trim(),
     carrier:   fCarrier.value,
-    packed:    formPacked,
-    message:   formMessage,
     pallets:   palletsData,
     createdAt: editingId ? (items.find(x => x.id === editingId)?.createdAt || Date.now()) : Date.now(),
   };
@@ -430,8 +403,6 @@ function render() {
         ? `<span class="badge-overdue">z ${shortDate(item.date)}</span>` : ''}</td>
       <td class="cell-size">${renderPallets(item.pallets)}</td>
       <td>${escHtml(carrierLabel(item.carrier))}</td>
-      <td class="${item.packed ? 'cell-yes' : 'cell-no'}">${item.packed ? 'TAK' : 'NIE'}</td>
-      <td class="${item.message ? 'cell-yes' : 'cell-no'}">${item.message ? 'TAK' : 'NIE'}</td>
       <td>
         <div class="actions-cell">
           <button class="btn btn-sm btn-edit"   onclick="openModal('${item.id}')">✏️ Edytuj</button>
