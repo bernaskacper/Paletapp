@@ -34,6 +34,16 @@
     <button id="btn-install-dismiss" style="background:transparent;border:none;color:#fff;font-size:1.2rem;padding:4px 8px;cursor:pointer;">✕</button>
   </div>
 
+  <!-- DAY TABS -->
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tab-today" role="tab">
+      Dziś <span class="tab-date"></span> <span class="tab-count">0</span>
+    </button>
+    <button class="tab" id="tab-tomorrow" role="tab">
+      Jutro <span class="tab-date"></span> <span class="tab-count">0</span>
+    </button>
+  </div>
+
   <!-- ACTION BAR -->
   <div class="action-bar">
     <button class="btn btn-primary" id="btn-add">+ Dodaj paletę</button>
@@ -83,6 +93,14 @@
     <h2 id="modal-title">Dodaj paletę</h2>
 
     <form id="pallet-form" novalidate>
+
+      <div class="form-group">
+        <label>Dzień wysyłki</label>
+        <div class="toggle-group">
+          <button type="button" class="toggle-btn" id="day-today">Dziś</button>
+          <button type="button" class="toggle-btn" id="day-tomorrow">Jutro</button>
+        </div>
+      </div>
 
       <div class="form-group">
         <label for="f-country">Kraj (kod)</label>

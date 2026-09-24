@@ -15,16 +15,43 @@ function getFlag(code) {
   return COUNTRY_FLAGS[key] ? COUNTRY_FLAGS[key] + ' ' + key : key;
 }
 
+// ── DATES ──────────────────────────────────────────────────────────────────────
+// Local date as YYYY-MM-DD (offset in days: 0 = today, 1 = tomorrow)
+function dayStr(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function shortDate(str) {
+  const [, m, d] = str.split('-');
+  return d + '.' + m;
+}
+
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let items = [];
 let editingId = null;
+let activeTab = 'today';   // 'today' | 'tomorrow'
+let renderedDay = null;
 
 function load() {
   // Clear old format (incompatible with new pallet structure)
   localStorage.removeItem('palety');
   try { items = JSON.parse(localStorage.getItem('palety_v2') || '[]'); }
   catch { items = []; }
+
+  // Entries from before tabs existed have no date — assign today
+  const today = dayStr(0);
+  let migrated = false;
+  items.forEach(item => { if (!item.date) { item.date = today; migrated = true; } });
+  if (migrated) save();
 }
+
+// Today tab also holds overdue entries from previous days
+function isToday(item)    { return item.date <= dayStr(0); }
+function visibleItems()   { return items.filter(item => (activeTab === 'today') === isToday(item)); }
 
 function save() {
   localStorage.setItem('palety_v2', JSON.stringify(items));
@@ -56,9 +83,12 @@ const fCompany  = document.getElementById('f-company');
 const fCarrier  = document.getElementById('f-carrier');
 const btnPacked  = { yes: document.getElementById('packed-yes'), no: document.getElementById('packed-no') };
 const btnMessage = { yes: document.getElementById('msg-yes'),    no: document.getElementById('msg-no') };
+const btnDay     = { today: document.getElementById('day-today'), tomorrow: document.getElementById('day-tomorrow') };
+const tabBtns    = { today: document.getElementById('tab-today'), tomorrow: document.getElementById('tab-tomorrow') };
 
 let formPacked  = false;
 let formMessage = false;
+let formDay     = 'today';
 
 // ── TOGGLE HELPERS ─────────────────────────────────────────────────────────────
 function setToggle(btns, val) {
@@ -75,6 +105,24 @@ function wireToggle(btns, setter) {
 
 wireToggle(btnPacked,  v => { formPacked  = v; });
 wireToggle(btnMessage, v => { formMessage = v; });
+
+function setDay(day) {
+  formDay = day;
+  btnDay.today.classList.toggle('active-day', day === 'today');
+  btnDay.tomorrow.classList.toggle('active-day', day === 'tomorrow');
+}
+
+btnDay.today.addEventListener('click',    () => setDay('today'));
+btnDay.tomorrow.addEventListener('click', () => setDay('tomorrow'));
+
+// ── TABS ───────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  render();
+}
+
+tabBtns.today.addEventListener('click',    () => switchTab('today'));
+tabBtns.tomorrow.addEventListener('click', () => switchTab('tomorrow'));
 
 // ── ENTER KEY NAVIGATION ───────────────────────────────────────────────────────
 document.getElementById('pallet-form').addEventListener('keydown', e => {
@@ -133,6 +181,7 @@ function openModal(id = null) {
     fCarrier.value  = item.carrier || '';
     formPacked      = item.packed;
     formMessage     = item.message;
+    setDay(isToday(item) ? 'today' : 'tomorrow');
 
     const rows = (item.pallets && item.pallets.length) ? item.pallets : [{ wymiary:'', waga:'', ilosc:1 }];
     rows.forEach(p => palletsList.appendChild(createPalletRow(p.wymiary, p.waga, p.ilosc)));
@@ -143,6 +192,8 @@ function openModal(id = null) {
     fCarrier.value  = '';
     formPacked      = false;
     formMessage     = false;
+    // Pallets are usually reported a day ahead — Today is the exception
+    setDay('tomorrow');
     palletsList.appendChild(createPalletRow());
   }
 
@@ -173,8 +224,15 @@ document.getElementById('pallet-form').addEventListener('submit', e => {
     if (wymiary) palletsData.push({ wymiary, waga, ilosc });
   });
 
+  // Keep an overdue entry's original date while it stays on Today
+  const existing = editingId ? items.find(x => x.id === editingId) : null;
+  const today = dayStr(0);
+  let date = formDay === 'tomorrow' ? dayStr(1) : today;
+  if (formDay === 'today' && existing && existing.date < today) date = existing.date;
+
   const item = {
     id:        editingId || uid(),
+    date,
     country:   fCountry.value.trim().toUpperCase(),
     company:   fCompany.value.trim(),
     carrier:   fCarrier.value,
@@ -190,7 +248,8 @@ document.getElementById('pallet-form').addEventListener('submit', e => {
     showToast('Paleta zaktualizowana');
   } else {
     items.unshift(item);
-    showToast('Paleta dodana');
+    showToast(formDay === activeTab ? 'Paleta dodana'
+      : 'Paleta dodana na ' + (formDay === 'today' ? 'dziś' : 'jutro'));
   }
 
   save();
@@ -209,12 +268,14 @@ function deleteEntry(id) {
 }
 
 document.getElementById('btn-clear').addEventListener('click', () => {
-  if (!items.length) { showToast('Brak palet do usunięcia'); return; }
-  confirm2('Czy na pewno chcesz usunąć wszystkie palety?', () => {
-    items = [];
+  const toRemove = visibleItems();
+  if (!toRemove.length) { showToast('Brak palet do usunięcia'); return; }
+  const tabName = activeTab === 'today' ? 'Dziś' : 'Jutro';
+  confirm2('Czy na pewno chcesz usunąć wszystkie palety z zakładki „' + tabName + '”?', () => {
+    items = items.filter(x => !toRemove.includes(x));
     save();
     render();
-    showToast('Wszystkie palety usunięte');
+    showToast('Palety z zakładki „' + tabName + '” usunięte');
   });
 });
 
@@ -273,7 +334,7 @@ function renderPallets(pallets) {
 const COPY_CARRIERS = ['raben', 'geis', 'dsv', 'other'];
 
 function buildCopyText(carrier) {
-  const relevant = items.filter(item => item.carrier === carrier);
+  const relevant = visibleItems().filter(item => item.carrier === carrier);
   const lines = [];
   relevant.forEach(item => {
     (item.pallets || []).forEach(p => {
@@ -287,14 +348,14 @@ function buildCopyText(carrier) {
   return 'Witam, palety do odbioru na dziś:\n\n' + lines.join('\n');
 }
 
-function setupCopyButtons() {
+function setupCopyButtons(shown) {
   let anyVisible = false;
 
   COPY_CARRIERS.forEach(carrier => {
     const btn = document.getElementById('copy-' + carrier);
     if (!btn) return;
 
-    const hasData = items.some(item =>
+    const hasData = shown.some(item =>
       item.carrier === carrier &&
       (item.pallets || []).some(p => p.wymiary)
     );
@@ -319,11 +380,40 @@ function setupCopyButtons() {
 }
 
 // ── RENDER ─────────────────────────────────────────────────────────────────────
+function pluralPozycja(n) {
+  if (n === 1) return 'pozycja';
+  const last = n % 10, last2 = n % 100;
+  return (last >= 2 && last <= 4 && (last2 < 12 || last2 > 14)) ? 'pozycje' : 'pozycji';
+}
+
+function renderTabs() {
+  const today = dayStr(0);
+  const countToday = items.filter(isToday).length;
+  const counts = { today: countToday, tomorrow: items.length - countToday };
+  const dates  = { today, tomorrow: dayStr(1) };
+
+  ['today', 'tomorrow'].forEach(tab => {
+    const btn = tabBtns[tab];
+    btn.classList.toggle('active', activeTab === tab);
+    btn.setAttribute('aria-selected', activeTab === tab);
+    btn.querySelector('.tab-date').textContent  = shortDate(dates[tab]);
+    btn.querySelector('.tab-count').textContent = counts[tab];
+  });
+}
+
 function render() {
-  const count = items.length;
-  headerCount.textContent = count + (count === 1 ? ' pozycja' : count < 5 ? ' pozycje' : ' pozycji');
+  const today = dayStr(0);
+  renderedDay = today;
+  renderTabs();
+
+  const shown = visibleItems();
+  const count = shown.length;
+  headerCount.textContent = count + ' ' + pluralPozycja(count);
 
   if (!count) {
+    emptyState.querySelector('p').innerHTML =
+      'Brak palet na ' + (activeTab === 'today' ? 'dziś' : 'jutro') +
+      '.<br>Dodaj paletę klikając przycisk powyżej.';
     emptyState.style.display  = 'block';
     tableWrapper.style.display = 'none';
     copyBar.style.display      = 'none';
@@ -333,10 +423,11 @@ function render() {
   emptyState.style.display  = 'none';
   tableWrapper.style.display = 'block';
 
-  tbody.innerHTML = items.map(item => `
+  tbody.innerHTML = shown.map(item => `
     <tr class="${rowClass(item.carrier)}">
       <td class="cell-country">${getFlag(item.country)}</td>
-      <td>${escHtml(item.company)}</td>
+      <td>${escHtml(item.company)}${item.date < today
+        ? `<span class="badge-overdue">z ${shortDate(item.date)}</span>` : ''}</td>
       <td class="cell-size">${renderPallets(item.pallets)}</td>
       <td>${escHtml(carrierLabel(item.carrier))}</td>
       <td class="${item.packed ? 'cell-yes' : 'cell-no'}">${item.packed ? 'TAK' : 'NIE'}</td>
@@ -350,8 +441,16 @@ function render() {
     </tr>
   `).join('');
 
-  setupCopyButtons();
+  setupCopyButtons(shown);
 }
+
+// Re-render after midnight so Tomorrow's entries move to Today
+function checkDayChange() {
+  if (dayStr(0) !== renderedDay) render();
+}
+
+setInterval(checkDayChange, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkDayChange(); });
 
 function escHtml(str) {
   return String(str)
